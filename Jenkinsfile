@@ -10,7 +10,7 @@ userRemoteConfigs: [[url: 'https://github.com/sumeet1993sanjeev/demoapp.git']])
         stage('Build jar and image using Docker file ') {
             steps {
                 script {
-                     def imageTag = "vsumeetkumarnaik/todoapp:latest"
+                     def imageTag = "sumeetkumarnaik/todoapp:latest"
                     docker.build(imageTag, '.')
                     echo 'successful Build Docker Image'
                 }
