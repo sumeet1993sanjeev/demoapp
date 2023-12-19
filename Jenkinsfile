@@ -10,7 +10,7 @@ userRemoteConfigs: [[url: 'https://github.com/sumeet1993sanjeev/demoapp.git']])
         stage('Build jar and image using Docker file ') {
             steps {
                 script {
-                     def imageTag = "vsumeetkumarnaik/todoapps:latest"
+                     def imageTag = "vsumeetkumarnaik/todoapp:latest"
                     docker.build(imageTag, '.')
                     echo 'successful Build Docker Image'
                 }
@@ -19,7 +19,7 @@ userRemoteConfigs: [[url: 'https://github.com/sumeet1993sanjeev/demoapp.git']])
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker_hub_cred', url: 'https://index.docker.io/v1/') {
-                        def imageTag = "sumeetkumarnaik/todoapps:latest"
+                        def imageTag = "sumeetkumarnaik/todoapp:latest"
                         docker.image(imageTag).push()
                         echo 'successful Push to Docker Hub'
                     }
