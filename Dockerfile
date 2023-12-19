@@ -11,7 +11,7 @@ COPY src ./src
 # Build the Spring Boot application JAR
 RUN mvn package
 # Use an official OpenJDK runtime image as the base image
-FROM openjdk:11-jre-slim
+FROM openjdk:11.0.15-jre
 # Set the working directory inside the container
 WORKDIR /app
 # Copy the Spring Boot JAR from the build stage into the container
