@@ -14,28 +14,6 @@ data:
   MYSQL_USER: root 
   MYSQL_PASSWORD: P@ssword
   MYSQL_DATABASE: tododb
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: todo-app-deployment
-  namespace: todoapp
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: todoapi  # Ensure this matches the labels in the template
-  template:
-    metadata:
-      labels:
-        app: todoapi  # Ensure this matches the selector labels
-    spec:
-      containers:
-        - name: todo-app-container
-          image: sumeetkumarnaik/todoapp:latest
-          ports:
-            - containerPort: 8081
 ---
 apiVersion: v1
 kind: Service
@@ -176,7 +154,7 @@ spec:
       - name: todoapi
         image: sumeetkumarnaik/todoapimysql:1.0
         ports:
-          - containerPort: 80
+          - containerPort: 8081
         env:
           - name: MYSQL_HOST
             valueFrom:
