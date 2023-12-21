@@ -17,15 +17,15 @@ spec:
           image: sumeetkumarnaik/todoapp:latest
           env:
             - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                configMapKeyRef:
-                  name: dbconfig
-                  key: MYSQL_PASSWORD
-            - name: MYSQL_DATABASE
-              valueFrom:
-                configMapKeyRef:
-                  name: dbconfig
-                  key: MYSQL_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: dbconfig
+                key: MYSQL_PASSWORD
+          - name: MYSQL_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: dbconfig
+                key: MYSQL_DATABASE
           ports:
             - containerPort: 3306
           volumeMounts:
@@ -35,7 +35,17 @@ spec:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
             claimName: mysql-pv-claim
-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dbconfig
+  namespace: todoapp
+data:
+  MYSQL_HOST: svctododb.todoapp.svc.cluster.local 
+  MYSQL_USER: root 
+  MYSQL_PASSWORD: P@ssword
+  MYSQL_DATABASE: tododb
 ---
 apiVersion: v1
 kind: Service
@@ -47,5 +57,5 @@ spec:
   ports:
     - protocol: TCP
       port: 8081
-      targetPort: 3306
+      targetPort: 8081
   type: NodePort
