@@ -78,7 +78,7 @@ spec:
             - containerPort: 3306
           volumeMounts:
             - name: dbpath
-			  mountPath: /var/lib/mysql
+              mountPath: /var/lib/mysql
 
 ---
 apiVersion: v1
@@ -103,8 +103,8 @@ metadata:
   namespace: mysql-namespace
 type: Opaque
 data:
-  MYSQL_ROOT_PASSWORD: root
-  MYSQL_HOST: svctododb.todoapp.svc.cluster.local 
-  MYSQL_USER: root 
-  MYSQL_PASSWORD: P@ssword
-  MYSQL_DATABASE: tododb
+  MYSQL_ROOT_PASSWORD: cm9vdA==  # base64-encoded "root"
+  MYSQL_HOST: c3ZjdG9kb2RiLnRvZG9hcHAuc3ZjLmNsdXN0ZXIubG9jYWwgCg==  # base64-encoded "svctododb.todoapp.svc.cluster.local"
+  MYSQL_USER: cm9vdA==  # base64-encoded "root"
+  MYSQL_PASSWORD: UEBzc3dvcmQ=  # base64-encoded "P@ssword"
+  MYSQL_DATABASE: dG9kb2Ri  # base64-encoded "tododb"
