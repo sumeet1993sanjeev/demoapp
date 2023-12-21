@@ -1,110 +1,156 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mysql-namespace
-
+  name: todoapp
 ---
 apiVersion: v1
-kind: PersistentVolume
+kind: ConfigMap
 metadata:
-  name: mysql-pv
-  namespace: mysql-namespace
-spec:
-  capacity:
-    storage: 5Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: mysql-storage-class
-  hostPath:
-    path: /path/to/host/directory
-
----
+  name: dbconfig
+  namespace: todoapp
+data:
+  MYSQL_HOST: svctododb.todoapp.svc.cluster.local 
+  MYSQL_USER: root 
+  MYSQL_PASSWORD: P@ssword
+  MYSQL_DATABASE: tododb
+--- 
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: Service
 metadata:
-  name: mysql-pvc
-  namespace: mysql-namespace
+  name: svctododb
+  namespace: todoapp
 spec:
-  storageClassName: mysql-storage-class
-  resources:
-    requests:
-      storage: 5Gi
-  accessModes:
-    - ReadWriteOnce
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mysql-deployment
-  namespace: mysql-namespace
-spec:
-  replicas: 1
+  type: ClusterIP
   selector:
-    matchLabels:
-      app: mysql
-  template:
-    metadata:
-      labels:
-        app: mysql
-    spec:
-      containers:
-        - name: mysql-container
-          image: mysql:latest
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: MYSQL_ROOT_PASSWORD
-            - name: MYSQL_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: MYSQL_DATABASE
-            - name: MYSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: MYSQL_USER
-            - name: MYSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: MYSQL_PASSWORD
-          ports:
-            - containerPort: 3306
-          volumeMounts:
-            - name: dbpath
-              mountPath: /var/lib/mysql
-
+    app: mysqldb
+  ports:
+  - port: 3306
+    targetPort: 3306
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
-  namespace: mysql-namespace
+  name: svctodoapp
+  namespace: todoapp
+spec:
+  type: LoadBalancer
+  selector:
+    app: todoapi
+  ports:
+  - port: 80
+    targetPort: 80
+--- 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mydbpv
+  namespace: todoapp
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: slow
+  hostPath:
+    path: /tmp/mysql
+    type: DirectoryOrCreate
+
+--- 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mydbpvc
+  namespace: todoapp
+spec:
+  storageClassName: slow
+  resources:
+    requests:
+      storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysqldb
+  namespace: todoapp
 spec:
   selector:
-    app: mysql
-  ports:
-    - protocol: TCP
-      port: 3306
-      targetPort: 3306
-  type: ClusterIP
-
----
-apiVersion: v1
-kind: Secret
+    matchLabels:
+      app: mysqldb
+  template:
+    metadata:
+      labels:
+        app: mysqldb
+    spec:
+      nodeSelector:
+        gpu: nvidia
+      containers:
+      - name: mysqldb
+        image: mysql
+        ports:
+        - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: dbconfig
+                key: MYSQL_PASSWORD
+          - name: MYSQL_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: dbconfig
+                key: MYSQL_DATABASE
+        volumeMounts:
+        - name: dbpath
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: dbpath
+        persistentVolumeClaim:
+          claimName: mydbpvc
+--- 
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: mysql-secret
-  namespace: mysql-namespace
-type: Opaque
-data:
-  MYSQL_ROOT_PASSWORD: cm9vdA==  # base64-encoded "root"
-  MYSQL_HOST: c3ZjdG9kb2RiLnRvZG9hcHAuc3ZjLmNsdXN0ZXIubG9jYWwgCg==  # base64-encoded "svctododb.todoapp.svc.cluster.local"
-  MYSQL_USER: cm9vdA==  # base64-encoded "root"
-  MYSQL_PASSWORD: UEBzc3dvcmQ=  # base64-encoded "P@ssword"
-  MYSQL_DATABASE: dG9kb2Ri  # base64-encoded "tododb"
+  name: todoapp
+  namespace: todoapp
+spec:
+  selector:
+    matchLabels:
+      app: todoapi
+  template:
+    metadata:
+      labels:
+        app: todoapi
+    spec:
+      nodeSelector:
+        gpu: nvidia
+      containers:
+      - name: todoapi
+        image: sumeetkumarnaik/todoapimysql:1.0
+        ports:
+        - containerPort: 80
+        env:
+          - name: MYSQL_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: dbconfig
+                key: MYSQL_HOST
+          - name: MYSQL_USER
+            valueFrom:
+              configMapKeyRef:
+                name: dbconfig
+                key: MYSQL_USER
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: dbconfig
+                key: MYSQL_PASSWORD
+          - name: MYSQL_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: dbconfig
+                key: MYSQL_DATABASE
