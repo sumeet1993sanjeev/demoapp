@@ -17,17 +17,17 @@ spec:
           image: sumeetkumarnaik/todoapp:latest
           env:
             - name: MYSQL_ROOT_PASSWORD
-            valueFrom:
-              configMapKeyRef:
-                name: dbconfig
-                key: MYSQL_PASSWORD
-          - name: MYSQL_DATABASE
-            valueFrom:
-              configMapKeyRef:
-                name: dbconfig
-                key: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: dbconfig
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: dbconfig
+                  key: MYSQL_DATABASE
           ports:
-            - containerPort: 3306
+            - containerPort: 8081
           volumeMounts:
             - name: mysql-persistent-storage
               mountPath: /var/lib/mysql
@@ -35,6 +35,7 @@ spec:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
             claimName: mysql-pv-claim
+
 ---
 apiVersion: v1
 kind: Service
