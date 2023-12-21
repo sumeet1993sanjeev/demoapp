@@ -6,11 +6,11 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      app: todo-app
+      app: todoapp
   template:
     metadata:
       labels:
-        app: todo-app
+        app: todoapp
     spec:
       containers:
         - name: todo-app-container
@@ -25,7 +25,7 @@ metadata:
   name: todo-app-service
 spec:
   selector:
-    app: todo-app
+    app: todoapp
   ports:
     - protocol: TCP
       port: 8081
