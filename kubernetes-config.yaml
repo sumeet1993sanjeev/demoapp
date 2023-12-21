@@ -16,7 +16,6 @@ data:
   MYSQL_DATABASE: tododb
 
 ---
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
